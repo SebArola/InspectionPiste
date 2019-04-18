@@ -221,26 +221,4 @@ class SupervisedDeepLearning:
             k = cv2.waitKey(1)
             if k == 27:
                 break
-
-def paint(event):
-    # python_green = "#476042"
-    x1, y1 = (event.x - 1), (event.y - 1)
-    x2, y2 = (event.x + 1), (event.y + 1)
-    cv.create_oval(x1, y1, x2, y2, fill="black",width=5)
-    draw.line([x1, y1, x2, y2],fill="black",width=5)
-
-
-
-if __name__ == "__main__":
-
-    fit = False
-    
-    
-    if fit :
-        model = SupervisedDeepLearning()        
-        model.fitModel()
-    else :
-        model = SupervisedDeepLearning('vgg19_weights.h5')
-        model.predict(3)
-        
-        
+       
