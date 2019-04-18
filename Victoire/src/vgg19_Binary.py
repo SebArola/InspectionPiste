@@ -7,10 +7,6 @@ from keras.callbacks import ModelCheckpoint
 import cv2, numpy as np
 import random as rd
 import os
-from PIL import ImageTk, Image, ImageDraw
-import PIL
-from tkinter import *
-import matplotlib.pyplot as plt
 import datetime
 import time
 
@@ -24,12 +20,25 @@ import time
 ###################################################################
 
 class SupervisedDeepLearning:
+
+	##
+	# __init__ :
+	# 	input :
+	#		weights_path : the path to the trained weight, none if there is no weight
+	#	Descrtiption : initialise the model with sgd optimizer
+	## 
     def __init__(self,weights_path=None):
         self.model = self.VGG_19(weights_path)
         rmsprop = RMSprop(lr=0.1, rho=0.9, epsilon=None, decay=1e-6)
         sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
         self.model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
+    ##
+	# VGG_19 :
+	# 	input :
+	#		weights_path : the path to the trained weight, none if there is no weight
+	#	Descrtiption : create the vgg neural network. Source in the header
+	## 
     def VGG_19(self,weights_path):
         model = Sequential()
         model.add(ZeroPadding2D((1,1),input_shape=(3,224,224)))
@@ -86,8 +95,14 @@ class SupervisedDeepLearning:
 
         return model
 
+    ##
+	# fitModel :
+	# 	input :
+	#		batch_size : size of the batch (default 16)
+	#		nb_epoch   : number of epoch (default 1)
+	#	Descrtiption : fit the vgg neural network with the given parameters and the labelled data base
+	## 
     def fitModel(self,batch_size=16,nb_epoch=1):
-        normal_class = "cercle"
         
         X_train, Y_train, X_valid, Y_valid = self.load_data(normal_class)
         checkpointer = ModelCheckpoint(filepath='vgg19_weights.h5', verbose=1, save_best_only=True)
@@ -100,86 +115,80 @@ class SupervisedDeepLearning:
               callbacks=[checkpointer])
         self.model.save_weights("vgg19_weights.h5")
         self.model.save("vgg19_fullmodel.h5")
-        # Plot training & validation accuracy values
-        plt.subplot(2, 1, 1)
-        plt.plot(history.history['acc'])
-        plt.plot(history.history['val_acc'])
-        plt.title('Model accuracy')
-        plt.ylabel('Accuracy')
-        
-        plt.legend(['Train', 'Test'], loc='upper left')
 
-        # Plot training & validation loss values
-        plt.subplot(2, 1, 2)
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('Model loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
-        plt.show()
-        #Save the plot on the computer
-        date = datetime.datetime.now()
-        date =str(date.day)+"-"+str(date.month)+"-"+str(date.hour)+"-"+str(date.minute)    
-        plt.savefig('vgg_19_fit_result_'+date+'.png')
-
-    def load_data(self, normal_class="cat"):
-        X_train = []
-        Y_train = []
-        X_valid = []
-        Y_valid = []
-        nbCercle = len(os.listdir("train/cercle"))
-        nbPCercle = len(os.listdir("train/pas_cercle"))
-        indC = 0
-        indPC=0
-        while indPC<nbCercle and indC<nbPCercle:
+        return history
+       
+    ##
+	# load_data :
+	#	input :
+	#		normalPath : path to the runway pictures with no debris (default "train/normal")
+	#		debrisPath   : path to the runway pictures with no debris (default "train/debris")
+	#	Descrtiption : Load the data in the data base, format need to respected 
+	#	DataBase format : piste_1.png debris_1.png
+	##
+    def load_data(self, normalPath="train/normal", debrisPath="train/debris"):
+        X_trainTab = []
+        Y_trainTab = []
+        X_validTab = []
+        Y_validTab = []
+        nbNormal = len(os.listdir(normalPath))
+        nbDebris = len(os.listdir(debrisPath))
+        indN = 0
+        indD= 0
+        while indD<nbNormal and indN<nbDebris:
             r = rd.randint(0,1)
-            if r==0 and indC<nbCercle:
-                im = cv2.resize(cv2.imread("train/cercle/cercle_"+str(indC)+".png"), (224, 224)).astype(np.float32)
+            if r==0 and indN<nbNormal:
+                im = cv2.resize(cv2.imread(normalPath+"/piste_"+str(indN)+".png"), (224, 224)).astype(np.float32)
                 im[:,:,0] -= 103.939
                 im[:,:,1] -= 116.779
                 im[:,:,2] -= 123.68
                 im = im.transpose((2,0,1))
                 #im = np.expand_dims(im, axis=0)
-                #im=cv2.imread("train/cercle/cercle_"+str(indC)+".png")
+                #im=cv2.imread("train/cercle/cercle_"+str(indN)+".png")
                 r = rd.randint(0,5)
                 if r == 0 :
-                    X_valid.append(im)
-                    Y_valid.append([1,0])
+                    X_validTab.append(im)
+                    Y_trainTab.append([1,0])
                 else :
-                    X_train.append(im)
-                    Y_train.append([1,0])
-                indC+=1
-            elif indPC<nbPCercle :
-                im = cv2.resize(cv2.imread("train/pas_cercle/pas_cercle_"+str(indPC)+".png"), (224, 224)).astype(np.float32)
+                    X_trainTab.append(im)
+                    Y_trainTab.append([1,0])
+                indN+=1
+            elif indD<nbDebris :
+                im = cv2.resize(cv2.imread(debrisPath+"/debris_"+str(indD)+".png"), (224, 224)).astype(np.float32)
                 im[:,:,0] -= 103.939
                 im[:,:,1] -= 116.779
                 im[:,:,2] -= 123.68
                 im = im.transpose((2,0,1))
                 #im = np.expand_dims(im, axis=0)
-                #im=cv2.imread("train/pas_cercle/pas_cercle_"+str(indPC)+".png")
+                #im=cv2.imread("train/pas_cercle/pas_cercle_"+str(indD)+".png")
                 r = rd.randint(0,5)
                 if r == 0 :
-                    X_valid.append(im)
-                    Y_valid.append([0,1])
+                    X_validTab.append(im)
+                    Y_trainTab.append([0,1])
                 else :
-                    X_train.append(im)
-                    Y_train.append([0,1])
-                indPC+=1
+                    X_trainTab.append(im)
+                    Y_trainTab.append([0,1])
+                indD+=1
 
-        X_train = np.array(X_train)
-        Y_train = np.array(Y_train)
+        X_train = np.array(X_trainTab)
+        Y_train = np.array(Y_trainTab)
 
         X_valid = np.array(X_valid)
         Y_valid = np.array(Y_valid)
 
         return X_train, Y_train, X_valid, Y_valid
 
-    def predict(self,frameSkipped):
-        posX,posY = -1,-1
+    ##
+	# predict :
+	#	input :
+	#		frameSkipped : number of frame to skipped
+	#		videoInput : path to the video input
+	#	Descrtiption : make a prediction on the frame from videoInput
+	##	
+    def predict(self,frameSkipped, videoInput):
         debut = time.time()
         nbFrame = 0
-        cap = cv2.VideoCapture("Video/test_script.mp4")
+        cap = cv2.VideoCapture(videoInput)
         ret, frame = cap.read()
         largeur_split = int(frame.shape[1]/3)
         hauteur_split =int(frame.shape[0]/3)
