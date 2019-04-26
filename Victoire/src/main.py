@@ -18,7 +18,7 @@ import numpy as np
 #		history : the history to be plot
 #	Descrtiption : plot the given history
 ## 
-def plotHistory(history):
+def plotHistory(history, ficName):
 	 # Plot training & validation accuracy values
 		plt.subplot(2, 1, 1)
 		plt.plot(history.history['acc'])
@@ -40,7 +40,7 @@ def plotHistory(history):
 		#Save the plot on the computer
 		date = datetime.datetime.now()
 		date =str(date.day)+"-"+str(date.month)+"-"+str(date.hour)+"-"+str(date.minute)	
-		plt.savefig('vgg_19_fit_result_'+date+'.png')
+		plt.savefig(ficName+date+'.png')
 
 		#Display the plot
 		plt.show()
@@ -93,12 +93,12 @@ if __name__ == "__main__":
 	
 	
 	if fit :
-		model = SupervisedDeepLearning()		
+		model = VGG_19_Binary()		
 		history = model.fitModel(16,10)
-		plotHistory(history[0])
+		plotHistory(history[0],'vgg_19_fit_result_')
 		cm_plot_labels = ["no_debris","debris"]
 		plot_confusion_matrix(history[1], cm_plot_labels,normalize=True,title="Confusion Matrix")
 	else :
-		model = SupervisedDeepLearning('vgg19_weights.h5')
+		model = VGG_19_Binary('vgg19_weights.h5')
 		model.predict(3,"../Video/test_script.mp4")
 		

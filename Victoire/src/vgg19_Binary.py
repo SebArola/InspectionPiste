@@ -21,7 +21,7 @@ from keras.utils import np_utils
 # https://gist.github.com/baraldilorenzo/8d096f48a1be4a2d660d
 ###################################################################
 
-class SupervisedDeepLearning:
+class VGG_19_Binary:
 
 	##
 	# __init__ :
@@ -150,7 +150,7 @@ class SupervisedDeepLearning:
 				im = im.transpose((2,0,1))
 				#im = np.expand_dims(im, axis=0)
 				#im=cv2.imread("train/cercle/cercle_"+str(indN)+".png")
-				r = rd.randint(0,5)
+				r = rd.randint(0,8)
 				if r == 0 :
 					X_validTab.append(im)
 					Y_validTab.append(1)
