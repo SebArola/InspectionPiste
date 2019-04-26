@@ -33,7 +33,7 @@ class VGG_19_Binary:
 		self.model = self.VGG_19(weights_path)
 		rmsprop = RMSprop(lr=0.1, rho=0.9, epsilon=None, decay=1e-6)
 		sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
-		self.model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
+		self.model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
 	##
 	# VGG_19 :

@@ -1,4 +1,4 @@
-from vgg19_Binary import SupervisedDeepLearning
+from vgg19_Binary import VGG_19_Binary
 import matplotlib.pyplot as plt
 import datetime
 from sklearn.metrics import confusion_matrix
