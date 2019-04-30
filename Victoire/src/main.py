@@ -89,16 +89,16 @@ def plot_confusion_matrix(cm, classes,
 
 if __name__ == "__main__":
 
-	fit = True
+	fit = False
 	
 	
 	if fit :
 		model = VGG_19_Binary()		
-		history = model.fitModel(16,10)
+		history = model.fitModel(16,20)
 		plotHistory(history[0],'vgg_19_fit_result_')
 		cm_plot_labels = ["no_debris","debris"]
 		plot_confusion_matrix(history[1], cm_plot_labels,normalize=True,title="Confusion Matrix")
 	else :
-		model = VGG_19_Binary('vgg19_weights.h5')
-		model.predict(3,"../Video/test_script.mp4")
+		model = VGG_19_Binary('vgg19_weights_20_epoch.h5')
+		model.predict(3,"../../Script/debris_parking_4.mp4")
 		
