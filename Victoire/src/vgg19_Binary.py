@@ -33,7 +33,7 @@ class VGG_19_Binary:
 		self.model = self.VGG_19(weights_path)
 		rmsprop = RMSprop(lr=0.1, rho=0.9, epsilon=None, decay=1e-6)
 		sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
-		self.model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+		self.model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
 	##
 	# VGG_19 :
@@ -90,7 +90,7 @@ class VGG_19_Binary:
 		model.add(Dropout(0.5))
 		model.add(Dense(4096, activation='relu'))
 		model.add(Dropout(0.5))
-		model.add(Dense(2, activation='softmax'))
+		model.add(Dense(1, activation='sigmoid'))
 
 		if weights_path != None :
 			model.load_weights(weights_path)
@@ -107,13 +107,13 @@ class VGG_19_Binary:
 	def fitModel(self,batch_size=16,nb_epoch=1):
 		
 		X_train, Y_train, X_valid, Y_valid = self.load_data()
-		checkpointer = ModelCheckpoint(filepath='vgg19_weights_20_epoch.h5', verbose=1, save_best_only=True)
-		history = self.model.fit(X_train, np_utils.to_categorical(Y_train),
+		checkpointer = ModelCheckpoint(filepath='vgg19_weights_sig.h5', verbose=1, save_best_only=True)
+		history = self.model.fit(X_train, Y_train,
 			  batch_size=batch_size,
 			  epochs=nb_epoch,
 			  shuffle=True,
 			  verbose=1,
-			  validation_data=(X_valid, np_utils.to_categorical(Y_valid)),
+			  validation_data=(X_valid, Y_valid),
 			  callbacks=[checkpointer])
 		self.model.save_weights("vgg19_weights_del.h5")
 		self.model.save("vgg19_fullmodel.h5")

@@ -89,7 +89,7 @@ def plot_confusion_matrix(cm, classes,
 
 if __name__ == "__main__":
 
-	fit = False
+	fit = True
 	
 	
 	if fit :
