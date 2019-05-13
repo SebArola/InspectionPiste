@@ -25,7 +25,7 @@ def ShuffleNetV2(include_top=True,
                  load_model=None,
                  num_shuffle_units=[3,7,3],
                  bottleneck_ratio=1,
-                 classes=1000):
+                 classes=2):
     if K.backend() != 'tensorflow': #Erreur si pas tensorflow
         raise RuntimeError('Only tensorflow supported for now')
     name = 'ShuffleNetV2_{}_{}_{}'.format(scale_factor, bottleneck_ratio, "".join([str(x) for x in num_shuffle_units]))
