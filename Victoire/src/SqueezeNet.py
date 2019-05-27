@@ -1,4 +1,6 @@
-from keras.models import Sequential
+from keras.models import Sequential, Model
+from keras.layers import Input, Activation, Concatenate, GlobalAveragePooling2D
+
 from keras.layers.core import Flatten, Dense, Dropout
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD, RMSprop
@@ -14,14 +16,11 @@ from keras.utils import np_utils
 
 ###################################################################
 # Paper source :
-# Very Deep Convolutional Networks for Large-Scale Image Recognition
-# K. Simonyan, A. Zisserman
-# arXiv:1409.1556
 # Keras code source :
-# https://gist.github.com/baraldilorenzo/8d096f48a1be4a2d660d
+# https://github.com/DT42/squeezenet_demo
 ###################################################################
 
-class VGG_19_Binary:
+class SqueezeNet:
 
 	##
 	# __init__ :
@@ -30,9 +29,9 @@ class VGG_19_Binary:
 	#	Descrtiption : initialise the model with sgd optimizer
 	## 
 	def __init__(self,weights_path=None):
-		self.model = self.VGG_19(weights_path)
+		self.model = self.SqueezeNet()
 		rmsprop = RMSprop(lr=0.1, rho=0.9, epsilon=None, decay=1e-6)
-		sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
+		sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
 		self.model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
 	##
@@ -41,61 +40,148 @@ class VGG_19_Binary:
 	#		weights_path : the path to the trained weight, none if there is no weight
 	#	Descrtiption : create the vgg neural network. Source in the header
 	## 
-	def VGG_19(self,weights_path):
-		model = Sequential()
-		model.add(ZeroPadding2D((1,1),input_shape=(3,224,224)))
-		model.add(Conv2D(64, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(64, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
+	def SqueezeNet(nb_classes=1, inputs=(3, 224, 224)):
+		""" Keras Implementation of SqueezeNet(arXiv 1602.07360)
+		@param nb_classes: total number of final categories
+		Arguments:
+		inputs -- shape of the input images (channel, cols, rows)
+		"""
+		input_img = Input(shape=(3, 224, 224))
+		conv1 = Conv2D(
+			96, (7, 7), activation='relu', kernel_initializer='glorot_uniform',
+			strides=(2, 2), padding='same', name='conv1',
+			data_format="channels_first")(input_img)
+		maxpool1 = MaxPooling2D(
+			pool_size=(3, 3), strides=(2, 2), name='maxpool1',
+			data_format="channels_first")(conv1)
+		fire2_squeeze = Conv2D(
+			16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire2_squeeze',
+			data_format="channels_first")(maxpool1)
+		fire2_expand1 = Conv2D(
+			64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire2_expand1',
+			data_format="channels_first")(fire2_squeeze)
+		fire2_expand2 = Conv2D(
+			64, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire2_expand2',
+			data_format="channels_first")(fire2_squeeze)
+		merge2 = Concatenate(axis=1)([fire2_expand1, fire2_expand2])
 
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(128, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(128, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
+		fire3_squeeze = Conv2D(
+			16, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire3_squeeze',
+			data_format="channels_first")(merge2)
+		fire3_expand1 = Conv2D(
+			64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire3_expand1',
+			data_format="channels_first")(fire3_squeeze)
+		fire3_expand2 = Conv2D(
+			64, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire3_expand2',
+			data_format="channels_first")(fire3_squeeze)
+		merge3 = Concatenate(axis=1)([fire3_expand1, fire3_expand2])
 
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
+		fire4_squeeze = Conv2D(
+			32, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire4_squeeze',
+			data_format="channels_first")(merge3)
+		fire4_expand1 = Conv2D(
+			128, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire4_expand1',
+			data_format="channels_first")(fire4_squeeze)
+		fire4_expand2 = Conv2D(
+			128, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire4_expand2',
+			data_format="channels_first")(fire4_squeeze)
+		merge4 = Concatenate(axis=1)([fire4_expand1, fire4_expand2])
+		maxpool4 = MaxPooling2D(
+			pool_size=(3, 3), strides=(2, 2), name='maxpool4',
+			data_format="channels_first")(merge4)
 
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
+		fire5_squeeze = Conv2D(
+			32, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire5_squeeze',
+			data_format="channels_first")(maxpool4)
+		fire5_expand1 = Conv2D(
+			128, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire5_expand1',
+			data_format="channels_first")(fire5_squeeze)
+		fire5_expand2 = Conv2D(
+			128, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire5_expand2',
+			data_format="channels_first")(fire5_squeeze)
+		merge5 = Concatenate(axis=1)([fire5_expand1, fire5_expand2])
 
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
+		fire6_squeeze = Conv2D(
+			48, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire6_squeeze',
+			data_format="channels_first")(merge5)
+		fire6_expand1 = Conv2D(
+			192, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire6_expand1',
+			data_format="channels_first")(fire6_squeeze)
+		fire6_expand2 = Conv2D(
+			192, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire6_expand2',
+			data_format="channels_first")(fire6_squeeze)
+		merge6 = Concatenate(axis=1)([fire6_expand1, fire6_expand2])
 
-		model.add(Flatten())
-		model.add(Dense(4096, activation='relu'))
-		model.add(Dropout(0.5))
-		model.add(Dense(4096, activation='relu'))
-		model.add(Dropout(0.5))
-		model.add(Dense(1, activation='sigmoid'))
+		fire7_squeeze = Conv2D(
+			48, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire7_squeeze',
+			data_format="channels_first")(merge6)
+		fire7_expand1 = Conv2D(
+			192, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire7_expand1',
+			data_format="channels_first")(fire7_squeeze)
+		fire7_expand2 = Conv2D(
+			192, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire7_expand2',
+			data_format="channels_first")(fire7_squeeze)
+		merge7 = Concatenate(axis=1)([fire7_expand1, fire7_expand2])
 
-		if weights_path != None :
-			model.load_weights(weights_path)
+		fire8_squeeze = Conv2D(
+			64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire8_squeeze',
+			data_format="channels_first")(merge7)
+		fire8_expand1 = Conv2D(
+			256, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire8_expand1',
+			data_format="channels_first")(fire8_squeeze)
+		fire8_expand2 = Conv2D(
+			256, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire8_expand2',
+			data_format="channels_first")(fire8_squeeze)
+		merge8 = Concatenate(axis=1)([fire8_expand1, fire8_expand2])
 
-		return model
+		maxpool8 = MaxPooling2D(
+			pool_size=(3, 3), strides=(2, 2), name='maxpool8',
+			data_format="channels_first")(merge8)
+		fire9_squeeze = Conv2D(
+			64, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire9_squeeze',
+			data_format="channels_first")(maxpool8)
+		fire9_expand1 = Conv2D(
+			256, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire9_expand1',
+			data_format="channels_first")(fire9_squeeze)
+		fire9_expand2 = Conv2D(
+			256, (3, 3), activation='relu', kernel_initializer='glorot_uniform',
+			padding='same', name='fire9_expand2',
+			data_format="channels_first")(fire9_squeeze)
+		merge9 = Concatenate(axis=1)([fire9_expand1, fire9_expand2])
+
+		fire9_dropout = Dropout(0.5, name='fire9_dropout')(merge9)
+		conv10 = Conv2D(
+			1, (1, 1), activation='relu', kernel_initializer='glorot_uniform',
+			padding='valid', name='conv10',
+			data_format="channels_first")(fire9_dropout)
+
+		global_avgpool10 = GlobalAveragePooling2D(data_format='channels_first')(conv10)
+		sigmoid = Activation("sigmoid", name='sigmoid')(global_avgpool10)
+
+		return Model(inputs=input_img, outputs=sigmoid)
 
 	##
 	# fitModel :
@@ -107,7 +193,7 @@ class VGG_19_Binary:
 	def fitModel(self,batch_size=16,nb_epoch=1):
 		
 		X_train, Y_train, X_valid, Y_valid = self.load_data()
-		checkpointer = ModelCheckpoint(filepath='vgg19_weights_sig.h5', verbose=1, save_best_only=True)
+		checkpointer = ModelCheckpoint(filepath='squeezenet_weights_sig.h5', verbose=1, save_best_only=True)
 		history = self.model.fit(X_train, Y_train,
 			  batch_size=batch_size,
 			  epochs=nb_epoch,
@@ -115,8 +201,8 @@ class VGG_19_Binary:
 			  verbose=1,
 			  validation_data=(X_valid, Y_valid),
 			  callbacks=[checkpointer])
-		self.model.save_weights("vgg19_weights_del.h5")
-		self.model.save("vgg19_fullmodel.h5")
+		self.model.save_weights("squeezenet_weights_sig.h5")
+		#self.model.save("vgg19_fullmodel.h5")
 		prediction = self.model.predict_classes(X_valid,batch_size=batch_size, verbose=1)
 		cm = confusion_matrix(Y_valid, prediction)
 		return (history,cm)
