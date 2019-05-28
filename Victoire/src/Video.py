@@ -5,7 +5,7 @@ import numpy as np
 class Video :
 
 	def __init__(self, weight, seuil, video_url):
-		self.model = VGG_Binary(weight)
+		self.model = VGG_Binary(19,weight)
 		self.seuil = seuil
 		self.video = video_url
 
@@ -37,7 +37,7 @@ class Video :
 				im = cv2.resize( np.array(mat_im[i][j]), (224, 224)).astype(np.float32)
 				im = np.expand_dims(im, axis=0)
 
-				out = self.model.predict(im)
-				if debris_or_not_debris(out):
+				out = self.model.model.predict(im)
+				if self.debris_or_not_debris(out):
 					return True
 		return False
