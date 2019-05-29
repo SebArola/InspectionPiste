@@ -21,7 +21,7 @@ class Main:
 
 	def getConfigInfo(self):
 		weigt = "vgg19_transfer.h5"
-		cam = 0
+		cam = "../../Script/debris_parking_3.mp4"
 		seuil = 0.8
 		tAttente = 2
 		return (weigt,seuil,cam, tAttente)
@@ -30,12 +30,12 @@ class Main:
 		check = time.time()
 		while(True):
 			if time.time()-check >= self.temps_attente:
-				self.video.predict()
+				tPreTraitement =time.time()
+				print("\n++++++++\nTemps d'attente : "+str(int(time.time()-check)))
+				result = self.video.predict()
+				print("Duree traitement : " + str(time.time()-tPreTraitement))
+				print("Debris : " + str(result))
 				check = time.time()
-
-			k = cv2.waitKey(1)
-			if k == 27:
-				break
 
 if __name__ == "__main__":
 	main = Main()
