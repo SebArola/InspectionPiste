@@ -1,0 +1,8 @@
+Config file, every argument must be put between the '=' and ';'.
+Do not change the parameters order nor add more or delete one
+{
+weigt=vgg19_transfer.h5; #Path to the weight of the neural network
+cam=../../Script/debris_parking_3.mp4; #Path to the camera or video
+threshold=0.8; #Threshold for the detection (between 0 and 1), when the cnn return a number above the threshold there is a debris
+waitingTime=2; #Waiting time between to inspection with the cnn, in second
+}

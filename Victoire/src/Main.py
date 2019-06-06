@@ -20,11 +20,26 @@ class Main:
 		self.video = Video(weight, seuil, video_url)
 
 	def getConfigInfo(self):
-		weigt = "vgg19_transfer.h5"
-		cam = "../../Script/debris_parking_3.mp4"
-		seuil = 0.8
-		tAttente = 2
-		return (weigt,seuil,cam, tAttente)
+		config = []
+		nb_param = 4
+		header = True
+		fichier = open("config.txt", "r")
+		for ligne in fichier:
+			if header == False :
+				if ligne != "}":
+					config.append(ligne.split("=")[1].split(";")[0])
+			if ligne == "{\n" :
+				header = False
+			
+		if len(config)<nb_param :
+			print("Error : expected "+str(nb_param)+" parameters in config.txt, but found "+str(len(config))+".")
+			exit(0)
+		else :
+			weight    = config[0]
+			cam      = config[1]
+			seuil    = config[2]
+			tAttente = config[3]
+			return (weight,seuil,cam, tAttente)
 
 	def startPredict(self):
 		check = time.time()
@@ -39,4 +54,4 @@ class Main:
 
 if __name__ == "__main__":
 	main = Main()
-	main.startPredict()
+	#main.startPredict()
