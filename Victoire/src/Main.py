@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import datetime
-from sklearn.metrics import confusion_matrix
 import datetime
 import time
 import cv2
@@ -8,7 +7,7 @@ from Video import Video
 
 ###################################
 #   Inspection.py : 
-# 	Author : Sébastien Arola
+# 	Author : Sebastien Arola
 #	Description : main class
 ###################################
 
@@ -26,8 +25,9 @@ class Main:
 		fichier = open("config.txt", "r")
 		for ligne in fichier:
 			if header == False :
-				if ligne != "}":
-					config.append(ligne.split("=")[1].split(";")[0])
+				if ligne == "}\n":
+					break;
+				config.append(ligne.split("->")[1].split(";")[0])
 			if ligne == "{\n" :
 				header = False
 			
@@ -37,8 +37,8 @@ class Main:
 		else :
 			weight    = config[0]
 			cam      = config[1]
-			seuil    = config[2]
-			tAttente = config[3]
+			seuil    = float(config[2])
+			tAttente = float(config[3])
 			return (weight,seuil,cam, tAttente)
 
 	def startPredict(self):
@@ -54,4 +54,4 @@ class Main:
 
 if __name__ == "__main__":
 	main = Main()
-	#main.startPredict()
+	main.startPredict()
