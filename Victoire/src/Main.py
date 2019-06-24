@@ -86,6 +86,7 @@ class Detection:
 				print("Debris : " + str(result))
 				check = time.time()
 
+
 def getConfigInfo(file, nb_param):
 	config = []
 	header = True
