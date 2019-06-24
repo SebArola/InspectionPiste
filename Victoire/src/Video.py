@@ -8,6 +8,7 @@ class Video :
 		self.model = VGG_Binary(19,weight)
 		self.seuil = seuil
 		self.video = video_url
+		self.cap = cv2.VideoCapture(self.video )
 
 	def debris_or_not_debris(self,sortie):
 		if sortie[0][0] > self.seuil:
@@ -20,9 +21,7 @@ class Video :
 	#	Descrtiption : make a prediction on the frame from self.video, called by Main.py
 	##	
 	def predict(self):
-
-		cap = cv2.VideoCapture(self.video)
-		ret, frame = cap.read()
+		ret, frame = self.cap.read()
 		largeur_split = int(frame.shape[1]/3)
 		hauteur_split =int(frame.shape[0]/3)
 

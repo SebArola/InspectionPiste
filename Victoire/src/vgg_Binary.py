@@ -114,7 +114,7 @@ class VGG_Binary:
 
 	
 	def VGG_16(self, weights_path):
-		my_VGG16 = Sequential() #Création d'un réseau de neurones vide
+		my_VGG16 = Sequential() #Creation d'un reseau de neurones vide
 
 
 		my_VGG16.add(Conv2D(64, (3, 3), input_shape=(3,224, 224), padding='same', activation='relu'))
@@ -145,10 +145,10 @@ class VGG_Binary:
 		#Ajout de la premiere couche fully connected, suivie d'une couche ReLU
 		my_VGG16.add(Dense(4096, activation='relu'))
 
-		#Ajout de la deuxième couche fully connected, suivie d'une couche ReLU
+		#Ajout de la deuxieme couche fully connected, suivie d'une couche ReLU
 		my_VGG16.add(Dense(4096, activation='relu'))
 
-		#Ajout de la dernière couche fully connected qui permet de classifier
+		#Ajout de la derniere couche fully connected qui permet de classifier
 		my_VGG16.add(Dense(1, activation='sigmoid'))
 
 		if weights_path != None :
