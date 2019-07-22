@@ -18,11 +18,11 @@ def wich_case(x,y,xmax,ymax):
 	return (posX, posY)
 
 	
-numB = 1252
-numPB = 0
+numB = 3254
+numPB = 3732
 posX,posY = -1,-1
 allPosXY = []
-cap = cv2.VideoCapture("debris_parking_4.mp4")
+cap = cv2.VideoCapture("pas_debris_02.MOV")
 ret, frame = cap.read()
 frame = cv2.resize(frame,(1366,768))
 split = 3
@@ -64,21 +64,12 @@ while(True):
 		posX,posY = -1,-1
 		for i in range(nbMClick):
 			posX,posY = wich_case(mouseXY[i][0],mouseXY[i][1],frame.shape[1],frame.shape[0])	
-			cv2.imwrite('../Victoire/Data/train/debris/debris_'+str(numPB)+'.png',mat_im[posX][posY])
+			cv2.imwrite('../Victoire/Data/valid/normal/piste_'+str(numB)+'.png',mat_im[posX][posY])
 			allPosXY.append([posX, posY])
-			numPB+=1
+			numB+=1
 		mouseXY = []
 		nbMClick = 0
-		posDebris = False
-		for i in range(split) :
-			for j in range(split) :
-				for pos in allPosXY:
-					if i== pos[0] and j== pos[1]:
-						posDebris = True
-				if posDebris==False :
-					cv2.imwrite('../Victoire/Data/train/normal/piste_'+str(numB)+'.png',mat_im[i][j])
-					numB+=1
-				posDebris = False
+		
 		allPosXY = []			
 		# Capture frame-by-frame
 		ret, frame = cap.read()

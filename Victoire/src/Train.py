@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import datetime
 from sklearn.metrics import confusion_matrix
 import numpy as np
-from SqueezeNet import SqueezeNet
 import datetime
 import time
 import cv2
@@ -88,6 +87,11 @@ def plot_confusion_matrix(cm, classes,
 					ha="center", va="center",
 					color="white" if cm[i, j] > thresh else "black")
 	fig.tight_layout()
+
+	date = datetime.datetime.now()
+	date =str(date.day)+"-"+str(date.month)+"-"+str(date.hour)+"-"+str(date.minute)	
+	ficName = "confusion_matrix_"
+	plt.savefig(ficName+date+'.png')
 	plt.show()
 	return ax
 
@@ -152,11 +156,11 @@ if __name__ == "__main__":
 
 	fit = True
 	
-	
+	print("That's good shit")
 	if fit :
-		model = VGG_Binary(19,"vgg19_weights.h5")
+		model = VGG_Binary(19,"pretrained")
 		#model = SqueezeNet()		
-		history = model.fitModel("vgg19_transfer.h5",12,20)
+		history = model.fitModel("vgg19_big_data_base.h5",32,100)
 		plotHistory(history[0],'vgg19_fit_result_')
 		cm_plot_labels = ["no_debris","debris"]
 		plot_confusion_matrix(history[1], cm_plot_labels,normalize=True,title="Confusion Matrix")
