@@ -3,6 +3,9 @@ from keras.layers.core import Flatten, Dense, Dropout
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD, RMSprop
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.preprocessing import image
+from keras.applications.vgg19 import preprocess_input
+
 from sklearn.metrics import confusion_matrix
 import keras
 import cv2
@@ -36,7 +39,7 @@ class VGG_Binary:
 		else:
 			self.model = self.VGG_16(weights_path)
 		rmsprop = RMSprop(lr=0.1, rho=0.9, epsilon=None, decay=1e-6)
-		sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+		sgd = SGD(lr=0.01, decay=1e-4, momentum=0.9, nesterov=True)
 		self.model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
 	##
@@ -46,51 +49,6 @@ class VGG_Binary:
 	#	Descrtiption : create the vgg neural network. Source in the header
 	## 
 	def VGG_19(self,weights_path):
-
-		model = Sequential()
-		model.add(ZeroPadding2D((1,1),input_shape=(224,224,3)))
-		model.add(Conv2D(64, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(64, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
-
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(128, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(128, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
-
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(256, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
-
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
-
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(ZeroPadding2D((1,1)))
-		model.add(Conv2D(512, (3, 3), activation="relu"))
-		model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format="channels_first"))
-
-		
 
 		if weights_path != None :
 			model = keras.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_shape=(224,224,3), pooling=None, classes=1000)
@@ -173,7 +131,7 @@ class VGG_Binary:
 			  shuffle=True,
 			  verbose=1,
 			  validation_data=(X_valid, Y_valid),
-			  callbacks=[checkpointer,earlystop])
+			  callbacks=[checkpointer])
 		self.model.save_weights(weigt_name)
 		#self.model.save("vgg19_fullmodel.h5")
 		prediction = self.model.predict(X_valid,batch_size=batch_size, verbose=1)
@@ -209,19 +167,27 @@ class VGG_Binary:
 				while os.path.isfile(normalPath+"/piste_"+str(indN)+".png") == False:
 					indN+=1
 					nbNormal+=1
-				im = cv2.resize(cv2.imread(normalPath+"/piste_"+str(indN)+".png"), (224, 224)).astype(np.float32)
+				img_path = normalPath+"/piste_"+str(indN)+".png"
+				img = image.load_img(img_path, target_size=(224, 224))
+				x = image.img_to_array(img)
+				#x = np.expand_dims(x, axis=0)
+				x = preprocess_input(x)
 
-				X_trainTab.append(im)
-				Y_trainTab.append(1)
+				X_trainTab.append(x)
+				Y_trainTab.append(0)
 				indN+=1
 			if r==1 and indD<nbDebris :
 				while os.path.isfile(debrisPath+"/debris_"+str(indD)+".png") == False:
 					indD+=1
 					nbDebris+=1
-				im = cv2.resize(cv2.imread(debrisPath+"/debris_"+str(indD)+".png"), (224, 224)).astype(np.float32)
+				img_path = debrisPath+"/debris_"+str(indD)+".png"
+				img = image.load_img(img_path, target_size=(224, 224))
+				x = image.img_to_array(img)
+				#x = np.expand_dims(x, axis=0)
+				x = preprocess_input(x)
 
-				X_trainTab.append(im)
-				Y_trainTab.append(0)
+				X_trainTab.append(x)
+				Y_trainTab.append(1)
 				indD+=1
 
 		while indVD<nbValidDebris or indVN<nbValidNormal+3254:
@@ -230,22 +196,31 @@ class VGG_Binary:
 				while os.path.isfile(validNormalPath+"/piste_"+str(indVN)+".png") == False:
 					indVN+=1
 					nbValidNormal+=1
-				im = cv2.resize(cv2.imread(validNormalPath+"/piste_"+str(indVN)+".png"), (224, 224)).astype(np.float32)
-		
-				X_validTab.append(im)
-				Y_validTab.append(1)
+				img_path = validNormalPath+"/piste_"+str(indVN)+".png"
+				img = image.load_img(img_path, target_size=(224, 224))
+				x = image.img_to_array(img)
+				#x = np.expand_dims(x, axis=0)
+				x = preprocess_input(x)
+
+				X_validTab.append(x)
+				Y_validTab.append(0)
 
 				indVN+=1
 			if r==1 and indVD < nbValidDebris :
 				while os.path.isfile(validDebrisPath+"/debris_"+str(indVD)+".png") == False:
 					indVD+=1
 					nbValidDebris+=1
-				im = cv2.resize(cv2.imread(validDebrisPath+"/debris_"+str(indVD)+".png"), (224, 224)).astype(np.float32)
-				
-				X_validTab.append(im)
-				Y_validTab.append(0)
+				img_path = validDebrisPath+"/debris_"+str(indVD)+".png"
+				img = image.load_img(img_path, target_size=(224, 224))
+				x = image.img_to_array(img)
+				#x = np.expand_dims(x, axis=0)
+				x = preprocess_input(x)
+
+				X_validTab.append(x)
+				Y_validTab.append(1)
 				
 				indVD+=1
+		print(len(X_trainTab))
 		print("indD  :"+str(indD))
 		print("indN  :"+str(indN))
 		print("indVD :"+str(indVD))
